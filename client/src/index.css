@@ -1,36 +1,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+/* Force legacy color space support for html2canvas compatibility if needed, 
+   but mainly we are using direct hex values in the component now. */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: 'Inter', 'Poppins', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: 'Poppins', sans-serif;
 }
 
-:root {
-  --background: 210 20% 98%;
-  --foreground: 222 47% 11%;
-  
-  --radius: 0.5rem;
-}
-
-.dark {
-  --background: 222 47% 11%;
-  --foreground: 210 40% 98%;
-}
-
+/* Base styles reset */
 @layer base {
-  * {
-    @apply border-[hsl(var(--border,214_32%_91%))];
-  }
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    background-color: #f4f7f9;
+    color: #2c3e50;
   }
 }
