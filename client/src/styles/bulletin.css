@@ -86,7 +86,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  white-space: nowrap; /* Prevent wrapping */
+  /* Correction for PDF export: force width/block to prevent squash */
+  min-width: 100%;
 }
 
 .date-info p { 
@@ -98,18 +99,20 @@
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: 1px;
+  white-space: nowrap;
 }
 
 .date-info strong { 
   font-family: 'Montserrat', sans-serif;
   font-weight: 700;
-  font-size: 36px; /* Slightly larger */
+  font-size: 36px; 
   line-height: 1;
   white-space: nowrap;
   color: white;
   margin: 0;
   letter-spacing: 0.5px;
   text-shadow: none;
+  display: block; /* Important for PDF renderer to treat it as block */
 }
 
 .validity-info {

@@ -60,7 +60,7 @@ const BREAKPOINTS = {
     { max: 804, aqiMax: 300 },
     { max: 1004, aqiMax: 500 },
   ],
-  CO: [ // ppb
+  CO: [ // ppm
     { max: 4.4, aqiMax: 50 },
     { max: 9.4, aqiMax: 100 },
     { max: 12.4, aqiMax: 150 },
@@ -97,9 +97,14 @@ const BREAKPOINTS = {
 export function calculateSubIndex(conc: number, pollutant: keyof typeof BREAKPOINTS): number {
   if (conc < 0) conc = 0;
   
-  // Special handling for CO which might be in ppm in breakpoints but check if data is in ppb or ppm?
-  // Usually standard breakpoints for CO are in ppm for 8-hour avg. 
-  // Let's assume input is consistent with breakpoints units.
+  // CO Unit handling:
+  // If we receive a CO value > 50, it is extremely likely to be in ppb or µg/m³, not ppm.
+  // Standard EPA breakpoints for CO are in ppm (range 0-50).
+  // 1 ppm = 1000 ppb. 
+  // If value > 50, we assume it's ppb and divide by 1000 to get ppm.
+  if (pollutant === 'CO' && conc > 50) {
+      conc = conc / 1000;
+  }
   
   const breakpoints = BREAKPOINTS[pollutant];
   let i = 0;
