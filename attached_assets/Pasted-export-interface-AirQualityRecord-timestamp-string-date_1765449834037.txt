@@ -1,6 +1,3 @@
-import Papa from 'papaparse';
-
-// AQI Data Interfaces
 export interface AirQualityRecord {
   timestamp: string;
   date: Date;
@@ -18,28 +15,19 @@ export interface AirQualityRecord {
 
 export interface DailySummary {
   date: string;
-  stations: StationSummary[];
+  stations: {
+    name: string;
+    maxNO2: number;
+    maxSO2: number;
+    maxCO: number;
+    maxO3: number;
+    maxPM25: number;
+    maxPM10: number;
+    mainPollutant: string;
+    aqi: number;
+  }[];
   cityAverageAQI: number;
   cityMaxAQI: number;
-  mainPollutant: string;
-  healthAdvice: {
-    general: string;
-    sensitive: string;
-  };
-  colorCode: string;
-  aqiLabel: string;
-}
-
-export interface StationSummary {
-  name: string;
-  maxNO2: number;
-  maxSO2: number;
-  maxCO: number;
-  maxO3: number;
-  maxPM25: number;
-  maxPM10: number;
-  mainPollutant: string;
-  aqi: number;
 }
 
 // AQI Breakpoints (Approximated US EPA)
@@ -61,12 +49,12 @@ const BREAKPOINTS = {
     { max: 1004, aqiMax: 500 },
   ],
   CO: [ // ppb
-    { max: 4.4, aqiMax: 50 },
-    { max: 9.4, aqiMax: 100 },
-    { max: 12.4, aqiMax: 150 },
-    { max: 15.4, aqiMax: 200 },
-    { max: 30.4, aqiMax: 300 },
-    { max: 50.4, aqiMax: 500 },
+    { max: 4400, aqiMax: 50 },
+    { max: 9400, aqiMax: 100 },
+    { max: 12400, aqiMax: 150 },
+    { max: 15400, aqiMax: 200 },
+    { max: 30400, aqiMax: 300 },
+    { max: 50400, aqiMax: 500 },
   ],
   O3: [ // ppb (8-hour)
     { max: 54, aqiMax: 50 },
@@ -94,12 +82,8 @@ const BREAKPOINTS = {
   ]
 };
 
-export function calculateSubIndex(conc: number, pollutant: keyof typeof BREAKPOINTS): number {
+function calculateSubIndex(conc: number, pollutant: keyof typeof BREAKPOINTS): number {
   if (conc < 0) conc = 0;
-  
-  // Special handling for CO which might be in ppm in breakpoints but check if data is in ppb or ppm?
-  // Usually standard breakpoints for CO are in ppm for 8-hour avg. 
-  // Let's assume input is consistent with breakpoints units.
   
   const breakpoints = BREAKPOINTS[pollutant];
   let i = 0;
@@ -123,19 +107,10 @@ export function calculateSubIndex(conc: number, pollutant: keyof typeof BREAKPOI
 export function getAQILabel(aqi: number): string {
   if (aqi <= 50) return "Bonne";
   if (aqi <= 100) return "Modérée";
-  if (aqi <= 150) return "Médiocre"; // "Peu Saine pour les Groupes Sensibles" shortened for UI
-  if (aqi <= 200) return "Mauvaise"; // "Peu Saine"
-  if (aqi <= 300) return "Très Mauvaise"; // "Très Peu Saine"
+  if (aqi <= 150) return "Médiocre";
+  if (aqi <= 200) return "Mauvaise";
+  if (aqi <= 300) return "Très Mauvaise";
   return "Dangereuse";
-}
-
-export function getAQIColor(aqi: number): string {
-  if (aqi <= 50) return "#2ecc71"; // Green
-  if (aqi <= 100) return "#f1c40f"; // Yellow
-  if (aqi <= 150) return "#e67e22"; // Orange
-  if (aqi <= 200) return "#e74c3c"; // Red
-  if (aqi <= 300) return "#9b59b6"; // Purple
-  return "#795548"; // Maroon
 }
 
 export function getHealthAdvice(aqi: number) {
@@ -163,22 +138,10 @@ export function getHealthAdvice(aqi: number) {
       sensitive: "Conduite Modérée : Mettez en pause les activités physiques intensives extérieures."
     };
   }
-  if (aqi <= 300) {
-    return {
-      general: "Évitez tout effort physique en extérieur.",
-      sensitive: "Restez à l'intérieur et limitez l'activité physique."
-    };
-  }
   return {
     general: "Alerte Rouge : Suspension de tout effort physique en extérieur.",
     sensitive: "Confinement Sanitaire : Isolement intérieur strict exigé."
   };
-}
-
-// Function to determine the critical station (station with highest AQI)
-export function getCriticalStation(stations: StationSummary[]): StationSummary | null {
-  if (!stations.length) return null;
-  return stations.reduce((prev, current) => (prev.aqi > current.aqi) ? prev : current);
 }
 
 export const parseCSV = (file: File): Promise<DailySummary | null> => {
@@ -205,9 +168,7 @@ export const parseCSV = (file: File): Promise<DailySummary | null> => {
           const stationRegex = /\((.*?)\)/;
 
           data.forEach(row => {
-            // Check for date property case-insensitively
-            const dateKey = Object.keys(row).find(k => k.toLowerCase() === 'date');
-            if (!dateKey || !row[dateKey]) return;
+            if (!row.date) return;
 
             headers.forEach(header => {
               const match = header.match(stationRegex);
@@ -277,19 +238,13 @@ export const parseCSV = (file: File): Promise<DailySummary | null> => {
 
           const cityMaxAQI = Math.max(...stationSummaries.map(s => s.aqi));
           
-          // Try to get date from first row
-          const dateKey = Object.keys(data[0]).find(k => k.toLowerCase() === 'date');
-          const dateStr = (dateKey && data[0][dateKey]) ? String(data[0][dateKey]).split(' ')[0] : new Date().toLocaleDateString();
+          const dateStr = data[0].date ? data[0].date.split(' ')[0] : new Date().toLocaleDateString();
 
           resolve({
             date: dateStr,
             stations: stationSummaries,
             cityAverageAQI: cityAvgAQI,
-            cityMaxAQI,
-            mainPollutant: stationSummaries.find(s => s.aqi === cityMaxAQI)?.mainPollutant || 'Inconnu',
-            healthAdvice: getHealthAdvice(cityMaxAQI), // Placeholder, will be enriched in component
-            colorCode: getAQIColor(cityMaxAQI), // Placeholder
-            aqiLabel: getAQILabel(cityMaxAQI) // Placeholder
+            cityMaxAQI
           });
 
         } catch (err) {
@@ -302,4 +257,3 @@ export const parseCSV = (file: File): Promise<DailySummary | null> => {
       }
     });
   });
-};
