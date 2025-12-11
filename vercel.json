@@ -3,7 +3,7 @@
   "builds": [
     {
       "src": "dist/index.cjs",
-      "use": "@vercel/node" // Déploiement du serveur Express compilé
+      "use": "@vercel/node" 
     }
   ],
   "routes": [
@@ -13,7 +13,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "dist/client/index.html" // Chemin vers le HTML compilé
+      "dest": "dist/client/index.html" 
     }
   ],
   "installCommand": "npm install",
