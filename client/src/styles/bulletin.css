@@ -1,0 +1,367 @@
+/* Variables de couleurs Originales */
+:root {
+  --color-primary: #007BFF;
+  --color-secondary: #00BFFF;
+  --color-text-dark: #2c3e50;
+  --color-text-light: #7f8c8d;
+  --color-bg-light: #f4f7f9;
+  --color-border: #e6e9ed;
+  --color-vert: #17A2B8; /* Nouveau Bleu Cyan */
+  --color-jaune: #f1c40f;
+  --color-orange: #e67e22;
+  --color-rouge: #e74c3c;
+  --color-violet: #9b59b6;
+  --color-marron: #6e4c4c;
+}
+
+/* Styles du bulletin EXACTS */
+.bulletin-container {
+  width: 100%;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  padding: 0;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+}
+
+.header {
+  background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+  color: white;
+  padding: 20px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-title { 
+  display: flex; 
+  align-items: center; 
+}
+
+.logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-right: 15px;
+  background-color: white;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  overflow: hidden;
+  padding: 2px;
+}
+
+.header-text h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.header-text p {
+  margin: 5px 0 0 0;
+  font-size: 14px;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+/* STYLE DU BLOC DATE */
+.date-info { 
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right; 
+} 
+
+.date-block {
+  margin-bottom: 5px; 
+  padding: 0; 
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.date-info p { 
+  font-weight: 400;
+  font-size: 12px;
+  margin: 0 0 5px 0; 
+  opacity: 0.8;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.date-info strong { 
+  font-weight: 700;
+  font-size: 32px; 
+  line-height: 1;
+  white-space: nowrap;
+  color: white;
+  margin: 0;
+  letter-spacing: 1px;
+  text-shadow: none;
+}
+
+.validity-info {
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  color: white;
+  background-color: var(--color-vert); /* Nouveau Bleu Cyan */
+  padding: 4px 10px; 
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+  text-transform: uppercase;
+  margin-top: 5px; 
+  line-height: 1.2;
+}
+
+.validity-info i {
+  margin-right: 4px; 
+  font-size: 11px;
+}
+
+.alert-bar {
+  color: white;
+  text-align: center;
+  padding: 15px 0;
+  font-weight: 700;
+  font-size: 18px;
+  text-transform: uppercase;
+}
+
+.main-content {
+  display: flex;
+  padding: 20px; /* Légère réduction du padding */
+  gap: 25px;
+}
+
+.left-section { 
+  flex: 2; 
+}
+
+.right-section { 
+  flex: 1; 
+  border-left: 1px solid var(--color-border);
+  padding-left: 25px;
+}
+
+/* OPTIMISATION: Réduction de la taille du bloc AQI global */
+.aqi-global {
+  text-align: center;
+  padding: 15px; /* Réduit le padding */
+  border-radius: 12px;
+  margin-bottom: 20px;
+  background-color: #ecf0f1;
+}
+
+.aqi-value {
+  font-size: 60px; /* Réduit la taille de la police */
+  font-weight: 700;
+  margin: 5px 0; /* Réduit les marges */
+  line-height: 1;
+}
+
+.aqi-label {
+  font-size: 20px; /* Réduit la taille de la police */
+  font-weight: 600;
+  margin-bottom: 10px; /* Réduit la marge */
+  text-transform: uppercase;
+}
+
+.pollutant-info {
+  margin-top: 10px; /* Réduit la marge */
+  text-align: left;
+}
+
+.pollutant-info p { 
+  display: flex; 
+  align-items: center; 
+  margin: 6px 0; /* Réduit les marges */
+  font-size: 13px; /* Légère réduction de la police */
+  color: var(--color-text-dark);
+}
+
+.dot {
+  height: 10px; /* Réduction de la taille du dot */
+  width: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.info-boxes { 
+  display: flex; 
+  gap: 20px; 
+  margin-top: 20px; 
+  /* Changement: Assure que la boîte de recommandation prend toute la largeur */
+  flex-direction: column; 
+}
+
+.recommendation-box { /* Suppression de .description-box dans cette liste */
+  flex: 1;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background-color: white;
+}
+
+.box-title {
+  font-weight: 700;
+  margin-bottom: 15px;
+  font-size: 18px;
+  display: flex; 
+  align-items: center;
+  color: var(--color-primary);
+}
+
+.pollutants-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.pollutant-card {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 15px 10px;
+  text-align: center;
+  background-color: white;
+}
+
+.critical-card {
+  /* border: 3px solid var(--critical-color, red); handled inline */
+  background-color: #fffafa;
+}
+
+.pollutant-card i {
+    font-size: 24px;
+    margin-bottom: 8px;
+    color: var(--color-text-dark);
+}
+
+.pollutant-card h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text-dark);
+}
+
+.pollutant-card p {
+    margin: 5px 0 0 0;
+    font-size: 11px;
+    color: var(--color-text-light);
+}
+
+.legend {
+  padding: 20px 25px;
+  border-top: 1px solid var(--color-border);
+  background-color: #ecf0f1;
+}
+
+.legend-title {
+     font-weight: 700;
+     margin-bottom: 10px;
+     font-size: 16px;
+     color: var(--color-text-dark);
+     display: flex;
+     align-items: center;
+}
+
+.legend-items {
+  display: flex; 
+  justify-content: space-between;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.legend-item {
+  flex: 1; 
+  text-align: center; 
+  padding: 10px 5px;
+  font-size: 11px; 
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* NOUVEAUX STYLES POUR L'EXPLICATION FINALE AMÉLIORÉE */
+.explanation-footer {
+  padding: 15px 30px; /* Légère réduction du padding vertical */
+  background-color: #ffffff;
+  border-top: 1px solid var(--color-border);
+}
+
+.explanation-footer h4 {
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 10px; /* Réduction de la marge */
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+}
+
+.explanation-footer h4 i {
+  margin-right: 8px;
+  font-size: 20px;
+}
+
+.explanation-grid {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.explanation-item {
+  flex: 1;
+  padding: 12px 15px; /* Réduction du padding interne */
+  border-radius: 8px;
+  background-color: var(--color-bg-light); /* Fond très léger */
+  border: 1px solid var(--color-border);
+  min-width: 0;
+}
+
+.explanation-item h5 {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  color: var(--color-text-dark);
+}
+
+.explanation-item h5 i {
+  color: var(--color-vert);
+  margin-right: 6px;
+  font-size: 16px;
+}
+
+.explanation-item p {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-text-light);
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .main-content { 
+      flex-direction: column; 
+      padding: 20px;
+  }
+  
+  .right-section {
+      border-left: none;
+      border-top: 1px solid var(--color-border);
+      padding-left: 0;
+      padding-top: 20px;
+  }
+  
+  .info-boxes { 
+      flex-direction: column; 
+  }
+  
+  .explanation-grid {
+      flex-direction: column;
+  }
+}
