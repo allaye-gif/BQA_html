@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Bulletin Qualité de l'Air - Mali Météo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        /* Variables de couleurs */
+        :root {
+            --color-primary: #007BFF;
+            --color-secondary: #00BFFF;
+            --color-text-dark: #2c3e50;
+            --color-text-light: #7f8c8d;
+            --color-bg-light: #f4f7f9;
+            --color-border: #e6e9ed;
+            --color-vert: #17A2B8; /* Nouveau Bleu Cyan */
+            --color-jaune: #f1c40f;
+            --color-orange: #e67e22;
+            --color-rouge: #e74c3c;
+            --color-violet: #9b59b6;
+            --color-marron: #6e4c4c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0; 
+            /* FIX CRITIQUE: Ajout d'un padding vertical au body pour l'espace visuel sur écran */
+            padding: 20px 0; 
+            background-color: var(--color-bg-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--color-text-dark);
+            line-height: 1.6;
+        }
+        
+        .main-app-container {
+            width: 100%;
+            max-width: 1100px;
+            /* L'objectif est que ce conteneur soit un simple wrapper sans marges/padding ajoutés */
+        }
+        
+        .input-panel {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px dashed var(--color-border);
+            width: 100%; /* Assure qu'il prend la largeur maximale */
+            max-width: 1100px;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .upload-label {
+            cursor: pointer;
+            display: inline-block;
+            background-color: var(--color-primary);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+        
+        .loading-indicator, .error-message {
+            margin-top: 15px;
+            font-weight: 600;
+        }
+        
+        .loading-indicator { color: var(--color-primary); }
+        .error-message { color: var(--color-rouge); }
+
+        .export-button {
+            background-color: #e74c3c;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin: 20px 0;
+        }
+
+        /* Styles du bulletin */
+        .bulletin-container {
+            width: 100%;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title { 
+            display: flex; 
+            align-items: center; 
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-right: 15px;
+            background-color: white;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+        
+        .header-text h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .header-text p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* STYLE DU BLOC DATE */
+        .date-info { 
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right; 
+        } 
+
+        .date-block {
+            margin-bottom: 5px; 
+            padding: 0; 
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        .date-info p { 
+            font-weight: 400;
+            font-size: 12px;
+            margin: 0 0 5px 0; 
+            opacity: 0.8;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+        
+        .date-info strong { 
+            font-weight: 700;
+            font-size: 32px; 
+            line-height: 1;
+            white-space: nowrap;
+            color: white;
+            margin: 0;
+            letter-spacing: 1px;
+            text-shadow: none;
+        }
+
+        .validity-info {
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            color: white;
+            background-color: var(--color-vert); /* Nouveau Bleu Cyan */
+            padding: 4px 10px; 
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+            text-transform: uppercase;
+            margin-top: 5px; 
+            line-height: 1.2;
+        }
+        
+        .validity-info i {
+            margin-right: 4px; 
+            font-size: 11px;
+        }
+
+        .alert-bar {
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        
+        .main-content {
+            display: flex;
+            padding: 20px; /* Légère réduction du padding */
+            gap: 25px;
+        }
+        
+        .left-section { 
+            flex: 2; 
+        }
+        
+        .right-section { 
+            flex: 1; 
+            border-left: 1px solid var(--color-border);
+            padding-left: 25px;
+        }
+        
+        /* OPTIMISATION: Réduction de la taille du bloc AQI global */
+        .aqi-global {
+            text-align: center;
+            padding: 15px; /* Réduit le padding */
+            border-radius: 12px;
+            margin-bottom: 20px;
+            background-color: #ecf0f1;
+        }
+        
+        .aqi-value {
+            font-size: 60px; /* Réduit la taille de la police */
+            font-weight: 700;
+            margin: 5px 0; /* Réduit les marges */
+            line-height: 1;
+        }
+        
+        .aqi-label {
+            font-size: 20px; /* Réduit la taille de la police */
+            font-weight: 600;
+            margin-bottom: 10px; /* Réduit la marge */
+        }
+        
+        .pollutant-info {
+            margin-top: 10px; /* Réduit la marge */
+            text-align: left;
+        }
+        
+        .pollutant-info p { 
+            display: flex; 
+            align-items: center; 
+            margin: 6px 0; /* Réduit les marges */
+            font-size: 13px; /* Légère réduction de la police */
+        }
+        
+        .dot {
+            height: 10px; /* Réduction de la taille du dot */
+            width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .info-boxes { 
+            display: flex; 
+            gap: 20px; 
+            margin-top: 20px; 
+            /* Changement: Assure que la boîte de recommandation prend toute la largeur */
+            flex-direction: column; 
+        }
+        
+        .recommendation-box { /* Suppression de .description-box dans cette liste */
+            flex: 1;
+            padding: 20px;
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            background-color: white;
+        }
+        
+        /* Suppression des styles pour .description-box non nécessaire */
+        
+        .box-title {
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex; 
+            align-items: center;
+            color: var(--color-primary);
+        }
+        
+        .pollutants-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .pollutant-card {
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            padding: 15px 10px;
+            text-align: center;
+            background-color: white;
+        }
+        
+        .critical-card {
+            border: 3px solid var(--critical-color, red);
+            background-color: #fffafa;
+        }
+        
+        .legend {
+            padding: 20px 25px;
+            border-top: 1px solid var(--color-border);
+            background-color: #ecf0f1;
+        }
+        
+        .legend-title {
+             font-weight: 700;
+             margin-bottom: 10px;
+             font-size: 16px;
+             color: var(--color-text-dark);
+        }
+        
+        .legend-items {
+            display: flex; 
+            justify-content: space-between;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .legend-item {
+            flex: 1; 
+            text-align: center; 
+            padding: 10px 5px;
+            font-size: 11px; 
+            font-weight: 600;
+        }
+        
+        .legend-item.bonne { background-color: var(--color-vert); color: white; }
+        .legend-item.moderee { background-color: var(--color-jaune); }
+        .legend-item.peu_saine_gs { background-color: var(--color-orange); }
+        .legend-item.peu_saine { background-color: var(--color-rouge); color: white; }
+        .legend-item.tres_peu_saine { background-color: var(--color-violet); color: white; }
+        .legend-item.dangereuse { background-color: var(--color-marron); color: white; }
+
+        /* NOUVEAUX STYLES POUR L'EXPLICATION FINALE AMÉLIORÉE */
+        .explanation-footer {
+            padding: 15px 30px; /* Légère réduction du padding vertical */
+            background-color: #ffffff;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .explanation-footer h4 {
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 10px; /* Réduction de la marge */
+            color: var(--color-primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .explanation-footer h4 i {
+            margin-right: 8px;
+            font-size: 20px;
+        }
+
+        .explanation-grid {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .explanation-item {
+            flex: 1;
+            padding: 12px 15px; /* Réduction du padding interne */
+            border-radius: 8px;
+            background-color: var(--color-bg-light); /* Fond très léger */
+            border: 1px solid var(--color-border);
+            min-width: 0;
+        }
+
+        .explanation-item h5 {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            color: var(--color-text-dark);
+        }
+        
+        .explanation-item h5 i {
+            color: var(--color-vert);
+            margin-right: 6px;
+            font-size: 16px;
+        }
+
+        .explanation-item p {
+            font-size: 12px;
+            line-height: 1.4;
+            color: var(--color-text-light);
+            margin: 0;
+        }
+
+        @media (max-width: 900px) {
+            .main-content { 
+                flex-direction: column; 
+                padding: 20px;
+            }
+            
+            .right-section {
+                border-left: none;
+                border-top: 1px solid var(--color-border);
+                padding-left: 0;
+                padding-top: 20px;
+            }
+            
+            .info-boxes { 
+                flex-direction: column; 
+            }
+            
+            .explanation-grid {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- CONTENEUR D'ENTRÉE (Non inclus dans l'export PDF) -->
+    <div id="input-panel" class="input-panel">
+        <h3>Générateur Automatisé de Bulletin Qualité de l'Air</h3>
+        <p>Veuillez glisser-déposer ou sélectionner le fichier CSV du jour pour générer le bulletin.</p>
+        <input type="file" id="csvFile" accept=".csv" />
+        <label for="csvFile" class="upload-label">
+            <i class="fas fa-upload"></i> Sélectionner le Fichier CSV
+        </label>
+        <div id="loading" class="loading-indicator" style="display:none;">
+            <i class="fas fa-spinner fa-spin"></i> Traitement en cours...
+        </div>
+        <div id="error" class="error-message" style="display:none;"></div>
+    </div>
+
+    <!-- BOUTON D'EXPORT (Non inclus dans l'export PDF) -->
+    <div id="export-button-container" style="display:none; text-align: center; width: 100%; max-width: 1100px;">
+        <button id="exportBtn" class="export-button">
+            <i class="fas fa-file-pdf"></i> Télécharger le Bulletin (PDF)
+        </button>
+    </div>
+
+    <!-- CONTENEUR PRINCIPAL DU BULLETIN (C'est CE QUI est exporté en PDF) -->
+    <div class="main-app-container">
+        <div id="bulletinOutput" class="bulletin-container" style="display:none;"></div>
+    </div>
+
+    <script>
+        // Constantes
+        const AQI_CATEGORIES = [
+            [0, 50, "Bonne", "vert", "Bonne", "Excellente, aucun risque pour la santé. Profitez de l'air frais."],
+            [51, 100, "Modérée", "jaune", "Modérée", "Peu de risques, mais les personnes sensibles devraient limiter les efforts prolongés en extérieur."],
+            [101, 150, "Peu Saine pour les Groupes Sensibles", "orange", "Peu Saine GS", "Les groupes sensibles (enfants, personnes âgées, malades respiratoires) devraient éviter les activités intenses en extérieur."],
+            [151, 200, "Peu Saine", "rouge", "Peu Saine", "Tout le monde peut commencer à ressentir des effets sur la santé. Les groupes sensibles sont fortement affectés. Limitez les sorties."],
+            [201, 300, "Très Peu Saine", "violet", "Très Peu Saine", "Alerte sanitaire, risque élevé de maladie pour tous. Éviter tout effort en extérieur et rester à l'intérieur."],
+            [301, 500, "Dangereuse", "marron", "Dangereuse", "Urgence sanitaire: Évitez tout effort physique et restez à l'intérieur. Masques FFP2 fortement recommandés si vous devez sortir."],
+        ];
+
+        const PM25_BREAKPOINTS = [
+            [0.0, 12.0, 0, 50],
+            [12.1, 35.4, 51, 100],
+            [35.5, 55.4, 101, 150],
+            [55.5, 150.4, 151, 200],
+            [150.5, 250.4, 201, 300],
+            [250.5, 500.0, 301, 400],
+            [500.1, 2000.0, 401, 500]
+        ];
+
+        const STATION_NAMES_MAP = {
+            'ML_BKO_Qualité_Air_1': 'BKO_Qualité_Air_1',
+            'ML_QA_LASSA': 'Lassa',
+            'ML_QA_SOTUBA': 'Sotuba',
+            'ML_QA_BAMAKO-UNIVERSITE': 'Hamdallaye ACI'
+        };
+
+        // Fonction de formatage de date
+        function parseDate(dateStr) {
+            
+            if (!dateStr || typeof dateStr !== 'string') return null;
+            
+            let cleanDateStr = dateStr.trim();
+            
+            const datePart = cleanDateStr.split(' ')[0]; 
+            
+            const normalizedDatePart = datePart.replace(/[\/\-\.]/g, '/');
+
+            const dateParts = normalizedDatePart.split('/');
+            
+            if (dateParts.length !== 3) {
+                console.log("Format de date invalide (attendu DD/MM/YYYY ou DD-MM-YYYY):", dateStr);
+                return null;
+            }
+
+            const day = parseInt(dateParts[0], 10);
+            const month = parseInt(dateParts[1], 10) - 1; // Mois 0-indexed (0=Janvier)
+            const year = parseInt(dateParts[2], 10);
+            
+            if (isNaN(day) || isNaN(month) || isNaN(year) || year < 1000) return null;
+
+            // Retourner le format DD/MM/YYYY
+            const d = String(day).padStart(2, '0');
+            const m = String(month + 1).padStart(2, '0');
+            const y = String(year);
+            
+            return `${d}/${m}/${y}`; // Retourne la chaîne simple JJ/MM/AAAA
+        }
+
+        // Fonction de calcul AQI
+        function calculateAqi(concentration, breakpoints) {
+            if (concentration === null || concentration < 0) return null;
+
+            for (const bp of breakpoints) {
+                const [CPLo, CPHi, ILo, IHi] = bp;
+                if (concentration >= CPLo && concentration <= CPHi) {
+                    const aqi = ((IHi - ILo) / (CPHi - CPLo)) * (concentration - CPLo) + ILo;
+                    return Math.round(aqi);
+                }
+            }
+            return breakpoints[breakpoints.length - 1][3];
+        }
+
+        function getAqiDetails(aqi) {
+            if (aqi === null || aqi === 0) {
+                return { 
+                    name: "Non calculé", 
+                    colorVar: "var(--color-text-light)", 
+                    recommendation: "Données insuffisantes pour le calcul de l'AQI." 
+                };
+            }
+            
+            for (const category of AQI_CATEGORIES) {
+                const [aqi_lo, aqi_hi, name, color_class, short_name, recommendation] = category;
+                if (aqi >= aqi_lo && aqi <= aqi_hi) {
+                    return { 
+                        name: name, 
+                        colorVar: `var(--color-${color_class})`, 
+                        recommendation: recommendation 
+                    };
+                }
+            }
+            
+            return { 
+                name: "Dangereuse", 
+                colorVar: "var(--color-marron)", 
+                recommendation: AQI_CATEGORIES[AQI_CATEGORIES.length - 1][5] 
+            };
+        }
+
+        // Parsing CSV
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n').filter(line => line.trim() !== '');
+            if (lines.length < 2) throw new Error("Fichier CSV vide ou incomplet");
+
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            const dateIndex = headers.findIndex(h => h.toLowerCase() === 'date');
+            
+            const data = lines.slice(1).map(line => {
+                const cells = line.split(',').map((cell, index) => {
+                    const cleanCell = cell.trim().replace(/^"|"$/g, '');
+
+                    if (index === dateIndex) {
+                        return cleanCell;
+                    }
+
+                    if (cleanCell === '' || cleanCell.toLowerCase() === 'nan') return NaN;
+                    const num = parseFloat(cleanCell.replace(',', '.'));
+                    return isNaN(num) ? cleanCell : num;
+                });
+                return cells;
+            });
+
+            return { headers, data };
+        }
+
+        // TRAITEMENT DES DONNÉES
+        function processData(parsedData) {
+            const { headers, data } = parsedData;
+            
+            const dateIndex = headers.findIndex(h => h.toLowerCase() === 'date');
+            
+            if (dateIndex === -1) {
+                throw new Error("Colonne 'date' introuvable dans le fichier CSV");
+            }
+
+            let bulletinDate = "Date inconnue";
+            
+            for (const row of data) {
+                const dateValue = String(row[dateIndex]); 
+                const parsedDateStr = parseDate(dateValue); 
+                
+                if (parsedDateStr) {
+                    bulletinDate = parsedDateStr; 
+                    break; 
+                }
+            }
+            
+            const pm25Columns = headers
+                .map((header, index) => header.includes('PM2.5') ? index : -1)
+                .filter(index => index !== -1);
+
+            if (pm25Columns.length === 0) {
+                throw new Error("Aucune colonne PM2.5 trouvée");
+            }
+
+            let maxPM25 = -Infinity;
+            let criticalStation = "Inconnue";
+
+            data.forEach(row => {
+                pm25Columns.forEach(colIndex => {
+                    const value = row[colIndex];
+                    if (typeof value === 'number' && !isNaN(value) && value > maxPM25) {
+                        maxPM25 = value;
+                        const headerName = headers[colIndex];
+                        const stationKey = Object.keys(STATION_NAMES_MAP).find(key => 
+                            headerName.includes(key)
+                        );
+                        criticalStation = stationKey ? STATION_NAMES_MAP[stationKey] : "Inconnue";
+                    }
+                });
+            });
+
+            if (maxPM25 === -Infinity) {
+                throw new Error("Aucune donnée PM2.5 valide trouvée");
+            }
+
+            const aqi = calculateAqi(maxPM25, PM25_BREAKPOINTS) || 0;
+            const aqiDetails = getAqiDetails(aqi);
+
+            // La suppression de la 'description_context' est gérée dans generateBulletinHTML
+            return {
+                date: bulletinDate,
+                overall_aqi: aqi,
+                aqi_name: aqiDetails.name,
+                aqi_color_var: aqiDetails.colorVar,
+                critical_pollutant: "PM2.5", 
+                critical_concentration: maxPM25.toFixed(1),
+                critical_station: criticalStation,
+                health_recommendation: aqiDetails.recommendation,
+                description_context: "Ce bulletin a été généré automatiquement.", // Garder pour la fonction mais non affiché
+            };
+        }
+
+        // GÉNÉRATION HTML
+        function generateBulletinHTML(data) {
+            const criticalColor = data.aqi_color_var;
+            
+            return `
+                <div id="pdf-content">
+                    <div class="header">
+                        <div class="header-title">
+                            <div class="logo">
+                                <i class="fas fa-wind" style="font-size: 30px; color: var(--color-primary);"></i>
+                            </div>
+                            <div class="header-text">
+                                <h2>MALI MÉTÉO</h2>
+                                <p>BULLETIN QUALITÉ DE L'AIR DE BAMAKO</p>
+                            </div>
+                        </div>
+                        <div class="date-info">
+                            <div class="date-block">
+                                <p>DATE DU RELEVÉ</p>
+                                <strong>${data.date}</strong>
+                            </div>
+                            <div class="validity-info">
+                                <i class="fas fa-chart-line"></i> 
+                                Validité: 24h
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert-bar" style="background-color: ${data.aqi_color_var};">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        ALERTE : Qualité de l'Air ${data.aqi_name.toUpperCase()} (AQI: ${data.overall_aqi})
+                    </div>
+
+                    <div class="main-content">
+                        <div class="left-section">
+                            <div class="aqi-global">
+                                <p style="font-size: 14px; margin-bottom: 5px; color: var(--color-text-light);">Indice de Qualité de l'Air (AQI)</p>
+                                <p style="font-size: 12px; margin-bottom: 10px; color: var(--color-text-light);">Valeur maximale mesurée</p>
+                                <div class="aqi-value" style="color: ${data.aqi_color_var};">${data.overall_aqi}</div>
+                                <div class="aqi-label" style="color: ${data.aqi_color_var};">${data.aqi_name.toUpperCase()}</div>
+                                
+                                <div class="pollutant-info">
+                                    <p>
+                                        <span class="dot" style="background-color: ${data.aqi_color_var};"></span> 
+                                        <strong>Polluant Critique :</strong> ${data.critical_pollutant}
+                                    </p>
+                                    <p>
+                                        <i class="fas fa-map-marker-alt"></i> 
+                                        <strong>Station :</strong> ${data.critical_station}
+                                    </p>
+                                    <p>
+                                        <i class="fas fa-chart-line"></i> 
+                                        <strong>Concentration Maximale :</strong> ${data.critical_concentration} µg/m³
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="info-boxes">
+                                <div class="recommendation-box">
+                                    <div class="box-title">
+                                        <i class="fas fa-notes-medical"></i> Recommandations Santé
+                                    </div>
+                                    <p>${data.health_recommendation}</p>
+                                </div>
+                                <!-- Suppression de la description-box pour gagner de l'espace -->
+                            </div>
+                        </div>
+
+                        <div class="right-section">
+                            <div class="box-title">
+                                <i class="fas fa-wind"></i> Polluants Surveillés
+                            </div>
+                            <div class="pollutants-grid">
+                                <div class="pollutant-card critical-card" style="--critical-color: ${criticalColor};">
+                                    <i class="fas fa-smog"></i>
+                                    <h4>PM2.5</h4>
+                                    <p>Particules fines</p>
+                                </div>
+                                <div class="pollutant-card">
+                                    <i class="fas fa-cloud"></i>
+                                    <h4>PM10</h4>
+                                    <p>Particules inhalables</p>
+                                </div>
+                                <div class="pollutant-card">
+                                    <i class="fas fa-sun"></i>
+                                    <h4>O3</h4>
+                                    <p>Ozone</p>
+                                </div>
+                                <div class="pollutant-card">
+                                    <i class="fas fa-industry"></i>
+                                    <h4>NO2</h4>
+                                    <p>Dioxyde d'azote</p>
+                                </div>
+                                <div class="pollutant-card">
+                                    <i class="fas fa-burn"></i>
+                                    <h4>SO2</h4>
+                                    <p>Dioxyde de soufre</p>
+                                </div>
+                                <div class="pollutant-card">
+                                    <i class="fas fa-head-side-cough"></i>
+                                    <h4>CO</h4>
+                                    <p>Monoxyde de carbone</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="legend">
+                        <div class="legend-title">
+                            <i class="fas fa-chart-bar"></i> Échelle de Qualité de l'Air (AQI)
+                        </div>
+                        <div class="legend-items">
+                            <div class="legend-item bonne">Bonne (0-50)</div>
+                            <div class="legend-item moderee">Modérée (51-100)</div>
+                            <div class="legend-item peu_saine_gs">Peu Saine GS (101-150)</div>
+                            <div class="legend-item peu_saine">Peu Saine (151-200)</div>
+                            <div class="legend-item tres_peu_saine">Très Peu Saine (201-300)</div>
+                            <div class="legend-item dangereuse">Dangereuse (301-500)</div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION D'EXPLICATION AMÉLIORÉE -->
+                    <div class="explanation-footer">
+                        <h4><i class="fas fa-book-reader"></i> Comprendre Notre Bulletin</h4>
+                        <div class="explanation-grid">
+                            <div class="explanation-item">
+                                <h5><i class="fas fa-sort-numeric-up"></i> AQI (Score central)</h5>
+                                <p>Indique la gravité de la pollution maximale mesurée. Plus le chiffre est élevé (jusqu'à 500), plus l'air est potentiellement nocif pour la santé.</p>
+                            </div>
+                            <div class="explanation-item">
+                                <h5><i class="fas fa-filter"></i> Polluant Critique</h5>
+                                <p>C'est la substance (particules fines, ozone, etc.) dont la concentration est la plus élevée et qui donne le score AQI de la journée.</p>
+                            </div>
+                            <div class="explanation-item">
+                                <h5><i class="fas fa-hand-point-right"></i> Recommandations</h5>
+                                <p>Suivez-les strictement pour minimiser votre exposition et protéger les groupes sensibles (enfants, personnes âgées, etc.).</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- FIN DE LA SECTION D'EXPLICATION -->
+                </div>
+            `;
+        }
+
+        // EXPORT PDF - VERSION SIMPLE ET FONCTIONNELLE
+        function exportToPDF() {
+            // Cible l'élément qui contient le contenu du bulletin.
+            // Note: Nous ciblons maintenant le bulletinOutput, qui lui-même contient #pdf-content.
+            const element = document.getElementById('bulletinOutput'); 
+            
+            if (!element || element.style.display === 'none') {
+                // Afficher un message d'erreur dans l'UI au lieu d'une alerte
+                document.getElementById('error').textContent = "Veuillez d'abord générer un bulletin";
+                document.getElementById('error').style.display = 'block';
+                return;
+            }
+
+            // Options simples pour html2pdf
+            const options = {
+                // DIMINUTION DE LA MARGE À 3MM
+                margin: 3, 
+                filename: 'bulletin_qualite_air.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2,
+                    useCORS: true
+                },
+                jsPDF: { 
+                    unit: 'mm', 
+                    format: 'a4', 
+                    orientation: 'portrait'
+                }
+            };
+
+            // Générer le PDF
+            html2pdf()
+                .set(options)
+                // On exporte le contenu de l'élément à l'intérieur du bulletinOutput
+                .from(element.querySelector('#pdf-content')) 
+                .save()
+                .catch(err => {
+                    console.error("Erreur PDF:", err);
+                    document.getElementById('error').textContent = "Erreur lors de la génération du PDF";
+                    document.getElementById('error').style.display = 'block';
+                });
+        }
+
+        // GESTION DES ÉVÉNEMENTS
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('csvFile');
+            const exportBtn = document.getElementById('exportBtn');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const bulletinOutput = document.getElementById('bulletinOutput');
+            const exportContainer = document.getElementById('export-button-container');
+
+            // Événement de sélection de fichier
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                loading.style.display = 'block';
+                error.style.display = 'none';
+                bulletinOutput.style.display = 'none';
+                exportContainer.style.display = 'none';
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const csvText = e.target.result;
+                        const parsedData = parseCSV(csvText);
+                        const processedData = processData(parsedData);
+                        
+                        // Le HTML généré va directement dans bulletinOutput
+                        bulletinOutput.innerHTML = generateBulletinHTML(processedData);
+                        bulletinOutput.style.display = 'block';
+                        exportContainer.style.display = 'block';
+                        
+                        console.log("Bulletin généré avec succès");
+                        console.log("Date affichée:", processedData.date);
+                        
+                    } catch (err) {
+                        error.textContent = 'Erreur: ' + err.message;
+                        error.style.display = 'block';
+                        console.error("Erreur:", err);
+                    } finally {
+                        loading.style.display = 'none';
+                    }
+                };
+                
+                reader.onerror = function() {
+                    loading.style.display = 'none';
+                    error.textContent = 'Erreur de lecture du fichier';
+                    error.style.display = 'block';
+                };
+
+                reader.readAsText(file, 'UTF-8');
+            });
+
+            // Événement d'export PDF
+            exportBtn.addEventListener('click', exportToPDF);
+
+            // Drag and drop
+            const inputPanel = document.getElementById('input-panel');
+            inputPanel.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                inputPanel.style.borderColor = 'var(--color-secondary)';
+            });
+
+            inputPanel.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                inputPanel.style.borderColor = 'var(--color-border)';
+            });
+
+            inputPanel.addEventListener('drop', function(e) {
+                e.preventDefault();
+                inputPanel.style.borderColor = 'var(--color-border)';
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    const event = new Event('change');
+                    fileInput.dispatchEvent(event);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
